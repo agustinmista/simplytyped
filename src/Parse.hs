@@ -57,11 +57,10 @@ action_6 _ = happyFail
 
 action_7 (17) = happyShift action_10
 action_7 (20) = happyShift action_11
-action_7 (23) = happyShift action_12
 action_7 (10) = happyGoto action_21
 action_7 _ = happyReduce_7
 
-action_8 _ = happyReduce_9
+action_8 _ = happyReduce_10
 
 action_9 (20) = happyShift action_20
 action_9 _ = happyFail
@@ -75,7 +74,7 @@ action_10 (9) = happyGoto action_7
 action_10 (10) = happyGoto action_8
 action_10 _ = happyFail
 
-action_11 _ = happyReduce_10
+action_11 _ = happyReduce_11
 
 action_12 (20) = happyShift action_18
 action_12 _ = happyFail
@@ -104,7 +103,7 @@ action_19 _ = happyFail
 action_20 (14) = happyShift action_24
 action_20 _ = happyFail
 
-action_21 _ = happyReduce_8
+action_21 _ = happyReduce_9
 
 action_22 (13) = happyShift action_23
 action_22 _ = happyFail
@@ -123,7 +122,7 @@ action_24 (21) = happyShift action_30
 action_24 (11) = happyGoto action_28
 action_24 _ = happyFail
 
-action_25 _ = happyReduce_11
+action_25 _ = happyReduce_12
 
 action_26 (15) = happyShift action_9
 action_26 (17) = happyShift action_10
@@ -193,7 +192,7 @@ action_40 (11) = happyGoto action_41
 action_40 _ = happyFail
 
 action_41 (19) = happyShift action_34
-action_41 _ = happyReduce_12
+action_41 _ = happyReduce_8
 
 happyReduce_3 = happySpecReduce_1  6 happyReduction_3
 happyReduction_3 (HappyAbsSyn7  happy_var_1)
@@ -238,39 +237,8 @@ happyReduction_7 (HappyAbsSyn8  happy_var_1)
 	)
 happyReduction_7 _  = notHappyAtAll 
 
-happyReduce_8 = happySpecReduce_2  9 happyReduction_8
-happyReduction_8 (HappyAbsSyn8  happy_var_2)
-	(HappyAbsSyn8  happy_var_1)
-	 =  HappyAbsSyn8
-		 (App happy_var_1 happy_var_2
-	)
-happyReduction_8 _ _  = notHappyAtAll 
-
-happyReduce_9 = happySpecReduce_1  9 happyReduction_9
-happyReduction_9 (HappyAbsSyn8  happy_var_1)
-	 =  HappyAbsSyn8
-		 (happy_var_1
-	)
-happyReduction_9 _  = notHappyAtAll 
-
-happyReduce_10 = happySpecReduce_1  10 happyReduction_10
-happyReduction_10 (HappyTerminal (TVar happy_var_1))
-	 =  HappyAbsSyn8
-		 (LVar happy_var_1
-	)
-happyReduction_10 _  = notHappyAtAll 
-
-happyReduce_11 = happySpecReduce_3  10 happyReduction_11
-happyReduction_11 _
-	(HappyAbsSyn8  happy_var_2)
-	_
-	 =  HappyAbsSyn8
-		 (happy_var_2
-	)
-happyReduction_11 _ _ _  = notHappyAtAll 
-
-happyReduce_12 = happyReduce 8 10 happyReduction_12
-happyReduction_12 ((HappyAbsSyn11  happy_var_8) `HappyStk`
+happyReduce_8 = happyReduce 8 8 happyReduction_8
+happyReduction_8 ((HappyAbsSyn11  happy_var_8) `HappyStk`
 	_ `HappyStk`
 	(HappyAbsSyn8  happy_var_6) `HappyStk`
 	_ `HappyStk`
@@ -282,6 +250,37 @@ happyReduction_12 ((HappyAbsSyn11  happy_var_8) `HappyStk`
 	 = HappyAbsSyn8
 		 (App (Abs happy_var_2 happy_var_8 happy_var_6) happy_var_4
 	) `HappyStk` happyRest
+
+happyReduce_9 = happySpecReduce_2  9 happyReduction_9
+happyReduction_9 (HappyAbsSyn8  happy_var_2)
+	(HappyAbsSyn8  happy_var_1)
+	 =  HappyAbsSyn8
+		 (App happy_var_1 happy_var_2
+	)
+happyReduction_9 _ _  = notHappyAtAll 
+
+happyReduce_10 = happySpecReduce_1  9 happyReduction_10
+happyReduction_10 (HappyAbsSyn8  happy_var_1)
+	 =  HappyAbsSyn8
+		 (happy_var_1
+	)
+happyReduction_10 _  = notHappyAtAll 
+
+happyReduce_11 = happySpecReduce_1  10 happyReduction_11
+happyReduction_11 (HappyTerminal (TVar happy_var_1))
+	 =  HappyAbsSyn8
+		 (LVar happy_var_1
+	)
+happyReduction_11 _  = notHappyAtAll 
+
+happyReduce_12 = happySpecReduce_3  10 happyReduction_12
+happyReduction_12 _
+	(HappyAbsSyn8  happy_var_2)
+	_
+	 =  HappyAbsSyn8
+		 (happy_var_2
+	)
+happyReduction_12 _ _ _  = notHappyAtAll 
 
 happyReduce_13 = happySpecReduce_1  11 happyReduction_13
 happyReduction_13 _
@@ -392,7 +391,7 @@ catchP m k = \s l -> case m s l of
                         Failed e -> k e s l
 
 happyError :: P a
-happyError = \s i -> Failed $ "Linea " ++ (show (i::LineNumber)) ++ ": Error de parseo\n" ++ (s)
+happyError = \s i -> Failed $ "Linea " ++ (show (i::LineNumber)) ++ ": Error de parseo \n" ++ (s)
 
 data Token = TVar String
                | TType
@@ -427,7 +426,7 @@ lexer cont s =
         ('-':('-':cs))     -> lexer cont $ dropWhile ((/=) '\n') cs
         ('{':('-':cs))     -> consumirBK 0 0 cont cs
         ('-':('}':cs))     -> \line -> Failed $ "Linea " ++ (show line) ++ ": Comentario no abierto"
-        unknown            -> \line -> Failed $ "Linea "++(show line)   ++ ": No se puede reconocer "
+        unknown            -> \line -> Failed $ "Linea " ++ (show line) ++ ": No se puede reconocer "
                                                 ++ (show $ take 10 unknown) ++ "..."
     where
          lexVar cs =

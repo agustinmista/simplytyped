@@ -41,13 +41,14 @@ import Data.Char
 %%
 
 Def     :  Defexp                           { $1 }
-        |  Exp                                { Eval $1 }
+        |  Exp                              { Eval $1 }
 
 Defexp  : DEF VAR '=' Exp                   { Def $2 $4 }
 
 Exp     :: { LamTerm }
         : '\\' VAR ':' Type '.' Exp         { Abs $2 $4 $6 }
         | NAbs                              { $1 }
+        | LET VAR '=' Exp IN Exp ':' Type   { App (Abs $2 $8 $6) $4 }
 
 NAbs    :: { LamTerm }
         : NAbs Atom                         { App $1 $2 }
@@ -56,7 +57,6 @@ NAbs    :: { LamTerm }
 Atom    :: { LamTerm }
         : VAR                               { LVar $1 }
         | '(' Exp ')'                       { $2 }
-        | LET VAR '=' Exp IN Exp ':' Type   { App (Abs $2 $8 $6) $4 }
 
 Type    : TYPE                              { Base }
         | Type '->' Type                    { Fun $1 $3 }
@@ -94,7 +94,7 @@ catchP m k = \s l -> case m s l of
                         Failed e -> k e s l
 
 happyError :: P a
-happyError = \s i -> Failed $ "Linea " ++ (show (i::LineNumber)) ++ ": Error de parseo\n" ++ (s)
+happyError = \s i -> Failed $ "Linea " ++ (show (i::LineNumber)) ++ ": Error de parseo \n" ++ (s)
 
 data Token = TVar String
                | TType
@@ -129,7 +129,7 @@ lexer cont s =
         ('-':('-':cs))     -> lexer cont $ dropWhile ((/=) '\n') cs
         ('{':('-':cs))     -> consumirBK 0 0 cont cs
         ('-':('}':cs))     -> \line -> Failed $ "Linea " ++ (show line) ++ ": Comentario no abierto"
-        unknown            -> \line -> Failed $ "Linea "++(show line)   ++ ": No se puede reconocer "
+        unknown            -> \line -> Failed $ "Linea " ++ (show line) ++ ": No se puede reconocer "
                                                 ++ (show $ take 10 unknown) ++ "..."
     where
          lexVar cs =

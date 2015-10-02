@@ -49,6 +49,7 @@ eval e (u :@: v)             = case eval e u of
 -----------------------
 --- quoting
 -----------------------
+
 quote :: Value -> Term
 quote (VLam t f) = Lam t f
 
@@ -63,7 +64,7 @@ infer = infer' []
 infer' :: Context -> NameEnv Value Type -> Term -> Either String Type
 infer' c _ (Bound i) = ret (c !! i)
 infer' _ e (Free n) = case lookup n e of
-                        Nothing -> notfoundError n
+                        Nothing    -> notfoundError n
                         Just (_,t) -> ret t
 infer' c e (t :@: u) = infer' c e t >>= \tt ->
                        infer' c e u >>= \tu ->
