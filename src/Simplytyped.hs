@@ -40,16 +40,15 @@ eval e (Free n)              = fst $ fromJust $ lookup n e
 eval _ (Lam t u)             = VLam t u
 eval e (Lam _ u :@: Lam s v) = eval e (sub 0 (Lam s v) u)
 eval e (Lam t u :@: v)       = case eval e v of
-                 VLam t' u' -> eval e (Lam t u :@: Lam t' u')
-                 _          -> error "Error de tipo en run-time, verificar type checker"
+                                 VLam t' u' -> eval e (Lam t u :@: Lam t' u')
+                                 _          -> error "Error de tipo en run-time, verificar type checker"
 eval e (u :@: v)             = case eval e u of
-                 VLam t u' -> eval e (Lam t u' :@: v)
-                 _         -> error "Error de tipo en run-time, verificar type checker"
+                                 VLam t u' -> eval e (Lam t u' :@: v)
+                                 _         -> error "Error de tipo en run-time, verificar type checker"
 
 -----------------------
 --- quoting
 -----------------------
-
 quote :: Value -> Term
 quote (VLam t f) = Lam t f
 
@@ -61,6 +60,22 @@ quote (VLam t f) = Lam t f
 infer :: NameEnv Value Type -> Term -> Either String Type
 infer = infer' []
 
+infer' :: Context -> NameEnv Value Type -> Term -> Either String Type
+infer' c _ (Bound i) = ret (c !! i)
+infer' _ e (Free n) = case lookup n e of
+                        Nothing -> notfoundError n
+                        Just (_,t) -> ret t
+infer' c e (t :@: u) = infer' c e t >>= \tt ->
+                       infer' c e u >>= \tu ->
+                       case tt of
+                         Fun t1 t2 -> if (tu == t1)
+                                        then ret t2
+                                        else matchError t1 tu
+                         _         -> notfunError tt
+infer' c e (Lam t u) = infer' (t:c) e u >>= \tu ->
+                       ret $ Fun t tu
+
+
 -- definiciones auxiliares
 ret :: Type -> Either String Type
 ret = Right
@@ -70,13 +85,11 @@ err = Left
 
 (>>=) :: Either String Type -> (Type -> Either String Type) -> Either String Type
 (>>=) v f = either Left f v
--- fcs. de error
 
+-- fcs. de error
 matchError :: Type -> Type -> Either String Type
-matchError t1 t2 = err $ "se esperaba " ++
-                         render (printType t1) ++
-                         ", pero " ++
-                         render (printType t2) ++
+matchError t1 t2 = err $ "se esperaba " ++ render (printType t1) ++
+                         ", pero "      ++ render (printType t2) ++
                          " fue inferido."
 
 notfunError :: Type -> Either String Type
@@ -85,18 +98,4 @@ notfunError t1 = err $ render (printType t1) ++ " no puede ser aplicado."
 notfoundError :: Name -> Either String Type
 notfoundError n = err $ show n ++ " no está definida."
 
-infer' :: Context -> NameEnv Value Type -> Term -> Either String Type
-infer' c _ (Bound i) = ret (c !! i)
-infer' _ e (Free n) = case lookup n e of
-                        Nothing -> notfoundError n
-                        Just (_,t) -> ret t
-infer' c e (t :@: u) = infer' c e t >>= \tt -> 
-                       infer' c e u >>= \tu ->
-                       case tt of
-                         Fun t1 t2 -> if (tu == t1) 
-                                        then ret t2
-                                        else matchError t1 tu
-                         _         -> notfunError tt
-infer' c e (Lam t u) = infer' (t:c) e u >>= \tu ->
-                       ret $ Fun t tu
 ----------------------------------
