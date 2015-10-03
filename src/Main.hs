@@ -155,8 +155,8 @@ module Main where
 
   compileFile :: State -> String -> IO State
   compileFile state@(S {..}) f =
-      do putStrLn ("Abriendo "++f++"...")
-         let f'= reverse(dropWhile isSpace (reverse f))
+      do putStrLn ("Abriendo " ++ f ++ "...")
+         let f' = reverse(dropWhile isSpace (reverse f))
          x  <- catch (readFile f')
                   (\e -> do let err = show (e :: IOException)
                             hPutStr stderr ("No se pudo abrir el archivo " ++ f' ++ ": " ++ err ++"\n")
@@ -178,9 +178,9 @@ module Main where
   printStmt stmt =
     do
         let outtext = case stmt of Def x (_,e) -> "def " ++ x ++ " = " ++ render (printTerm e)
-                                   Eval (d,e)  -> "LamTerm AST:\n"     ++ show d ++
-                                             "\n\nTerm AST:\n"        ++ show e ++
-                                             "\n\nSe muestra como:\n" ++ render (printTerm e)
+                                   Eval (d,e)  -> "LamTerm AST:    \n" ++ show d ++
+                                              "\n\nTerm AST:       \n" ++ show e ++
+                                              "\n\nSe muestra como:\n" ++ render (printTerm e)
         putStrLn outtext
 
   parseIO :: String -> (String -> ParseResult a) -> String -> IO (Maybe a)

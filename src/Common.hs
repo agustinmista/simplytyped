@@ -26,6 +26,7 @@ module Common where
   data LamTerm  =  LVar String
                 |  Abs String Type LamTerm
                 |  App LamTerm LamTerm
+                |  Let String LamTerm LamTerm Type
                 deriving (Show, Eq)
 
   -- Términos localmente sin nombres

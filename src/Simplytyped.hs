@@ -18,9 +18,10 @@ conversion :: LamTerm -> Term
 conversion = conversion' []
 
 conversion' :: [String] -> LamTerm -> Term
-conversion' b (LVar n)     = maybe (Free (Global n)) Bound (n `elemIndex` b)
-conversion' b (App t u)    = conversion' b t :@: conversion' b u
-conversion' b (Abs n t u)  = Lam t (conversion' (n:b) u)
+conversion' b (LVar n)      = maybe (Free (Global n)) Bound (n `elemIndex` b)
+conversion' b (App t u)     = conversion' b t :@: conversion' b u
+conversion' b (Abs n t u)   = Lam t (conversion' (n:b) u)
+conversion' b (Let x u v t) = Lam t (conversion' (x:b) u) :@: conversion' b u
 
 -----------------------
 --- eval

@@ -248,7 +248,7 @@ happyReduction_8 ((HappyAbsSyn11  happy_var_8) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn8
-		 (App (Abs happy_var_2 happy_var_8 happy_var_6) happy_var_4
+		 (Let happy_var_2 happy_var_4 happy_var_6 happy_var_8
 	) `HappyStk` happyRest
 
 happyReduce_9 = happySpecReduce_2  9 happyReduction_9

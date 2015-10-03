@@ -40,30 +40,30 @@ import Data.Char
 
 %%
 
-Def     :  Defexp                           { $1 }
-        |  Exp                              { Eval $1 }
+Def     :  Defexp                         { $1 }
+        |  Exp                            { Eval $1 }
 
-Defexp  : DEF VAR '=' Exp                   { Def $2 $4 }
+Defexp  : DEF VAR '=' Exp                 { Def $2 $4 }
 
 Exp     :: { LamTerm }
-        : '\\' VAR ':' Type '.' Exp         { Abs $2 $4 $6 }
-        | NAbs                              { $1 }
-        | LET VAR '=' Exp IN Exp ':' Type   { App (Abs $2 $8 $6) $4 }
+        : '\\' VAR ':' Type '.' Exp       { Abs $2 $4 $6 }
+        | NAbs                            { $1 }
+        | LET VAR '=' Exp IN Exp ':' Type { Let $2 $4 $6 $8 }
 
 NAbs    :: { LamTerm }
-        : NAbs Atom                         { App $1 $2 }
-        | Atom                              { $1 }
+        : NAbs Atom                       { App $1 $2 }
+        | Atom                            { $1 }
 
 Atom    :: { LamTerm }
-        : VAR                               { LVar $1 }
-        | '(' Exp ')'                       { $2 }
+        : VAR                             { LVar $1 }
+        | '(' Exp ')'                     { $2 }
 
-Type    : TYPE                              { Base }
-        | Type '->' Type                    { Fun $1 $3 }
-        | '(' Type ')'                      { $2 }
+Type    : TYPE                            { Base }
+        | Type '->' Type                  { Fun $1 $3 }
+        | '(' Type ')'                    { $2 }
 
-Defs    : Defexp Defs                       { $1 : $2 }
-        |                                   { [] }
+Defs    : Defexp Defs                     { $1 : $2 }
+        |                                 { [] }
 
 
 {
