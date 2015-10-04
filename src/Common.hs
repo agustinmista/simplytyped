@@ -24,16 +24,19 @@ module Common where
 
   -- Términos con nombres
   data LamTerm  =  LVar String
-                |  Abs String Type LamTerm
-                |  App LamTerm LamTerm
-                |  Let String LamTerm LamTerm Type
+                |  App  LamTerm LamTerm
+                |  Abs  String  Type    LamTerm
+                |  Let  String  LamTerm LamTerm
+                |  As   Type LamTerm
                 deriving (Show, Eq)
 
   -- Términos localmente sin nombres
   data Term  = Bound Int
-             | Free Name
-             | Term :@: Term
-             | Lam Type Term
+             | Free  Name
+             | Term  :@:    Term
+             | Lam   Type   Term
+             | TLet  String Term Term
+             | TAs   Type   Term
              deriving (Show, Eq)
 
   -- Valores

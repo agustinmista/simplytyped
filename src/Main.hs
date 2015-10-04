@@ -19,7 +19,7 @@ module Main where
   import Common
   import PrettyPrinter
   import Simplytyped
-  import Parse
+  import Parse hiding (Token)
 ---------------------
 --- Interpreter
 ---------------------

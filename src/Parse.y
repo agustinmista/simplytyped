@@ -12,21 +12,22 @@ import Data.Char
 %name term       Exp
 
 %tokentype     { Token }
-%lexer {lexer} { TEOF  }
+%lexer {lexer} { TokEOF  }
 
 %token
-    '='     { TEquals }
-    ':'     { TColon  }
-    '\\'    { TAbs    }
-    '.'     { TDot    }
-    '('     { TOpen   }
-    ')'     { TClose  }
-    '->'    { TArrow  }
-    VAR     { TVar $$ }
-    TYPE    { TType   }
-    DEF     { TDef    }
-    LET     { TLet    }
-    IN      { TIn     }
+    '='     { TokEquals }
+    ':'     { TokColon  }
+    '\\'    { TokAbs    }
+    '.'     { TokDot    }
+    '('     { TokOpen   }
+    ')'     { TokClose  }
+    '->'    { TokArrow  }
+    VAR     { TokVar $$ }
+    TYPE    { TokType   }
+    DEF     { TokDef    }
+    LET     { TokLet    }
+    IN      { TokIn     }
+    AS      { TokAs     }
 
 
 %right VAR
@@ -48,7 +49,8 @@ Defexp  : DEF VAR '=' Exp                 { Def $2 $4 }
 Exp     :: { LamTerm }
         : '\\' VAR ':' Type '.' Exp       { Abs $2 $4 $6 }
         | NAbs                            { $1 }
-        | LET VAR '=' Exp IN Exp ':' Type { Let $2 $4 $6 $8 }
+        | LET VAR '=' Exp IN Exp          { Let $2 $4 $6 }
+        | Exp AS Type                     { As $3 $1 }
 
 NAbs    :: { LamTerm }
         : NAbs Atom                       { App $1 $2 }
@@ -96,36 +98,37 @@ catchP m k = \s l -> case m s l of
 happyError :: P a
 happyError = \s i -> Failed $ "Linea " ++ (show (i::LineNumber)) ++ ": Error de parseo \n" ++ (s)
 
-data Token = TVar String
-               | TType
-               | TDef
-               | TAbs
-               | TDot
-               | TOpen
-               | TClose
-               | TColon
-               | TArrow
-               | TEquals
-               | TEOF
-               | TLet
-               | TIn
-               deriving Show
+data Token = TokVar String
+           | TokType
+           | TokDef
+           | TokAbs
+           | TokDot
+           | TokOpen
+           | TokClose
+           | TokColon
+           | TokArrow
+           | TokEquals
+           | TokEOF
+           | TokLet
+           | TokIn
+           | TokAs
+           deriving Show
 
 ----------------------------------
 lexer cont s =
     case s of
-        []                 -> cont TEOF []
+        []                 -> cont TokEOF []
         ('\n':s)           -> \line -> lexer cont s (line + 1)
         (c:cs) | isSpace c -> lexer cont cs
                | isAlpha c -> lexVar (c:cs)
-        ('-':('>':cs))     -> cont TArrow  cs
-        ('\\':cs)          -> cont TAbs    cs
-        ('.':cs)           -> cont TDot    cs
-        ('(':cs)           -> cont TOpen   cs
-        ('-':('>':cs))     -> cont TArrow  cs
-        (')':cs)           -> cont TClose  cs
-        (':':cs)           -> cont TColon  cs
-        ('=':cs)           -> cont TEquals cs
+        ('-':('>':cs))     -> cont TokArrow  cs
+        ('\\':cs)          -> cont TokAbs    cs
+        ('.':cs)           -> cont TokDot    cs
+        ('(':cs)           -> cont TokOpen   cs
+        ('-':('>':cs))     -> cont TokArrow  cs
+        (')':cs)           -> cont TokClose  cs
+        (':':cs)           -> cont TokColon  cs
+        ('=':cs)           -> cont TokEquals cs
         ('-':('-':cs))     -> lexer cont $ dropWhile ((/=) '\n') cs
         ('{':('-':cs))     -> consumirBK 0 0 cont cs
         ('-':('}':cs))     -> \line -> Failed $ "Linea " ++ (show line) ++ ": Comentario no abierto"
@@ -134,11 +137,12 @@ lexer cont s =
     where
          lexVar cs =
              case span isAlpha cs of
-                   ("B",   rest) -> cont TType      rest
-                   ("def", rest) -> cont TDef       rest
-                   ("let", rest) -> cont TLet       rest
-                   ("in",  rest) -> cont TIn        rest
-                   (var,   rest) -> cont (TVar var) rest
+                   ("B",   rest) -> cont TokType      rest
+                   ("def", rest) -> cont TokDef       rest
+                   ("let", rest) -> cont TokLet       rest
+                   ("in",  rest) -> cont TokIn        rest
+                   ("as",  rest) -> cont TokAs        rest
+                   (var,   rest) -> cont (TokVar var) rest
          consumirBK anidado cl cont s =
              case s of
                 ('-':('-':cs)) -> consumirBK anidado cl cont $ dropWhile ((/=) '\n') cs

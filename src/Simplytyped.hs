@@ -18,10 +18,12 @@ conversion :: LamTerm -> Term
 conversion = conversion' []
 
 conversion' :: [String] -> LamTerm -> Term
-conversion' b (LVar n)      = maybe (Free (Global n)) Bound (n `elemIndex` b)
-conversion' b (App t u)     = conversion' b t :@: conversion' b u
-conversion' b (Abs n t u)   = Lam t (conversion' (n:b) u)
-conversion' b (Let x u v t) = Lam t (conversion' (x:b) u) :@: conversion' b u
+conversion' b (LVar n)    = maybe (Free (Global n)) Bound (n `elemIndex` b)
+conversion' b (App t u)   = conversion' b t :@: conversion' b u
+conversion' b (Abs n t u) = Lam t (conversion' (n:b) u)
+conversion' b (Let x u v) = TLet x (conversion' b u) (conversion' b v)
+conversion' b (As t u)    = TAs t (conversion' b u)
+
 
 -----------------------
 --- eval
@@ -33,6 +35,9 @@ sub _ _ (Bound j) | otherwise = Bound j
 sub _ _ (Free n)              = Free n
 sub i t (u :@: v)             = sub i t u :@: sub i t v
 sub i t (Lam t' u)            = Lam t' (sub (i+1) t u)
+-- sub i t (TLet x u v)          = some stuff
+-- sub i t (TAs t u)             = some other stuff
+
 
 -- evaluador de términos
 eval :: NameEnv Value Type -> Term -> Value
@@ -46,6 +51,8 @@ eval e (Lam t u :@: v)       = case eval e v of
 eval e (u :@: v)             = case eval e u of
                                  VLam t u' -> eval e (Lam t u' :@: v)
                                  _         -> error "Error de tipo en run-time, verificar type checker"
+-- eval e (TLet x u v)          = some stuff
+-- eval e (TAs t u)             = some other stuff
 
 -----------------------
 --- quoting
@@ -63,19 +70,21 @@ infer :: NameEnv Value Type -> Term -> Either String Type
 infer = infer' []
 
 infer' :: Context -> NameEnv Value Type -> Term -> Either String Type
-infer' c _ (Bound i) = ret (c !! i)
-infer' _ e (Free n) = case lookup n e of
-                        Nothing    -> notfoundError n
-                        Just (_,t) -> ret t
-infer' c e (t :@: u) = infer' c e t >>= \tt ->
-                       infer' c e u >>= \tu ->
-                       case tt of
-                         Fun t1 t2 -> if (tu == t1)
-                                        then ret t2
-                                        else matchError t1 tu
-                         _         -> notfunError tt
-infer' c e (Lam t u) = infer' (t:c) e u >>= \tu ->
-                       ret $ Fun t tu
+infer' c _ (Bound i)   = ret (c !! i)
+infer' _ e (Free n)    = case lookup n e of
+                                Nothing    -> notfoundError n
+                                Just (_,t) -> ret t
+infer' c e (t :@: u)    = infer' c e t >>= \tt ->
+                            infer' c e u >>= \tu ->
+                                case tt of
+                                    Fun t1 t2 -> if (tu == t1)
+                                                 then ret t2
+                                                 else matchError t1 tu
+                                    _         -> notfunError tt
+infer' c e (Lam t u)    = infer' (t:c) e u >>= \tu ->
+                            ret $ Fun t tu
+-- infer' c e (TLet x u v) = some stuff
+-- infer' c e (TAs t u)    = some other stuff
 
 
 -- definiciones auxiliares
