@@ -28,6 +28,8 @@ import Data.Char
     LET     { TokLet    }
     IN      { TokIn     }
     AS      { TokAs     }
+    UNIT    { TokUnit   }
+    UNITT   { TokUnitT  }
 
 
 %right VAR
@@ -58,10 +60,12 @@ NAbs    :: { LamTerm }
 
 Atom    :: { LamTerm }
         : VAR                             { LVar $1 }
+        | UNIT                            { Unit }
         | '(' Exp ')'                     { $2 }
 
-Type    : TYPE                            { Base }
-        | Type '->' Type                  { Fun $1 $3 }
+Type    : TYPE                            { BaseT }
+        | UNITT                           { UnitT }
+        | Type '->' Type                  { FunT $1 $3 }
         | '(' Type ')'                    { $2 }
 
 Defs    : Defexp Defs                     { $1 : $2 }
@@ -112,6 +116,8 @@ data Token = TokVar String
            | TokLet
            | TokIn
            | TokAs
+           | TokUnit
+           | TokUnitT
            deriving Show
 
 ----------------------------------
@@ -137,12 +143,14 @@ lexer cont s =
     where
          lexVar cs =
              case span isAlpha cs of
-                   ("B",   rest) -> cont TokType      rest
-                   ("def", rest) -> cont TokDef       rest
-                   ("let", rest) -> cont TokLet       rest
-                   ("in",  rest) -> cont TokIn        rest
-                   ("as",  rest) -> cont TokAs        rest
-                   (var,   rest) -> cont (TokVar var) rest
+                   ("def",  rest) -> cont TokDef       rest
+                   ("let",  rest) -> cont TokLet       rest
+                   ("in",   rest) -> cont TokIn        rest
+                   ("as",   rest) -> cont TokAs        rest
+                   ("B",    rest) -> cont TokType      rest
+                   ("Unit", rest) -> cont TokUnitT     rest
+                   ("unit", rest) -> cont TokUnit      rest
+                   (var,    rest) -> cont (TokVar var) rest
          consumirBK anidado cl cont s =
              case s of
                 ('-':('-':cs)) -> consumirBK anidado cl cont $ dropWhile ((/=) '\n') cs

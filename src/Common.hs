@@ -10,38 +10,45 @@ module Common where
     fmap f (Eval i)  = Eval (f i)
 
   -- Tipos de los nombres
-  data Name =  Global  String
-            |  Quote   Int
+  data Name = Global  String
+            | Quote   Int
             deriving (Show, Eq)
 
   -- Entornos
   type NameEnv v t = [(Name, (v, t))]
 
   -- Tipo de los tipos
-  data Type = Base
-            | Fun Type Type
+  data Type = BaseT
+            | UnitT
+            | TupT  Type  Type
+            | FunT   Type  Type
             deriving (Show, Eq)
 
   -- Términos con nombres
-  data LamTerm  =  LVar String
+  data LamTerm  =  Unit
+                |  LVar String
                 |  App  LamTerm  LamTerm
                 |  Abs  String   Type     LamTerm
                 |  Let  String   LamTerm  LamTerm
                 |  As   Type     LamTerm
+                |  Tup  LamTerm  LamTerm
                 deriving (Show, Eq)
 
   -- Términos localmente sin nombres
-  data Term  = Bound Int
-             | Free  Name
+  data Term  = TUnit
+             | TBound Int
+             | TFree  Name
              | Term  :@:   Term
-             | Lam   Type  Term
+             | TLam   Type  Term
              | TLet  Term  Term
              | TAs   Type  Term
+             | TTup  Term  Term
              deriving (Show, Eq)
 
   -- Valores
   data Value = VLam Type Term
              | VUnit
+             | VTup
 
   -- Contextos del tipado
   type Context = [Type]
