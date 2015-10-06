@@ -20,6 +20,7 @@ module Main where
   import PrettyPrinter
   import Simplytyped
   import Parse hiding (Token)
+  
 ---------------------
 --- Interpreter
 ---------------------
@@ -140,6 +141,7 @@ module Main where
                Cmd [":help",":?"]   ""        (const Help)            "Mostrar esta lista de comandos",
                Cmd [":type"]        "<term>"  (FindType)              "Inferir el tipo de un término"]
 
+
   helpTxt :: [InteractiveCommand] -> String
   helpTxt cs = "Lista de comandos:\n\n"                         ++
                "<expr>                  Evaluar la expresión\n" ++
@@ -148,10 +150,12 @@ module Main where
                              let  ct = concat (intersperse ", " (map (++ if null a then "" else " " ++ a) c))
                              in   ct ++ replicate ((24 - length ct) `max` 2) ' ' ++ d) cs)
 
+
   compileFiles :: [String] -> State -> IO State
   compileFiles []     s  = return s
   compileFiles (x:xs) s  = do s' <- compileFile (s {lfile=x, inter=False})  x
                               compileFiles xs s'
+
 
   compileFile :: State -> String -> IO State
   compileFile state@(S {..}) f =
@@ -164,15 +168,18 @@ module Main where
          stmts <- parseIO f' (stmts_parse) x
          maybe (return state) (foldM handleStmt state) stmts
 
+
   compilePhrase :: State -> String -> IO State
   compilePhrase state x =
     do x' <- parseIO "<interactive>" stmt_parse x
        maybe (return state) (handleStmt state) x'
 
+
   printPhrase   :: String -> IO ()
   printPhrase x =
     do x' <- parseIO "<interactive>" stmt_parse x
        maybe (return ()) (printStmt . fmap (\y -> (y, conversion y)) ) x'
+
 
   printStmt ::  Stmt (LamTerm,Term) -> IO ()
   printStmt stmt =
@@ -183,10 +190,12 @@ module Main where
                                               "\n\nSe muestra como:\n" ++ render (printTerm e)
         putStrLn outtext
 
+
   parseIO :: String -> (String -> ParseResult a) -> String -> IO (Maybe a)
   parseIO f p x = case p x of Failed e -> do putStrLn (f++": "++e)
                                              return Nothing
                               Ok r     -> return (Just r)
+
 
   handleStmt :: State -> Stmt LamTerm -> IO State
   handleStmt state stmt =
@@ -208,6 +217,7 @@ module Main where
                                                     else render (text i)
                                              putStrLn outtext
                 return (state { ve = (Global i, (v, ty)) : ve state})
+
 
   prelude :: String
   prelude = "Prelude.lam"

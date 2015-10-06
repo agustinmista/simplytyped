@@ -3,7 +3,7 @@ module Common where
   -- Comandos interactivos o de archivos
   data Stmt i = Def String i    --  Declarar un nuevo identificador x, let x = t
               | Eval i          --  Evaluar el término
-    deriving (Show)
+              deriving (Show)
 
   instance Functor Stmt where
     fmap f (Def s i) = Def s (f i)
@@ -24,19 +24,19 @@ module Common where
 
   -- Términos con nombres
   data LamTerm  =  LVar String
-                |  App  LamTerm LamTerm
-                |  Abs  String  Type    LamTerm
-                |  Let  String  LamTerm LamTerm
-                |  As   Type LamTerm
+                |  App  LamTerm  LamTerm
+                |  Abs  String   Type     LamTerm
+                |  Let  String   LamTerm  LamTerm
+                |  As   Type     LamTerm
                 deriving (Show, Eq)
 
   -- Términos localmente sin nombres
   data Term  = Bound Int
              | Free  Name
-             | Term  :@:    Term
-             | Lam   Type   Term
-             | TLet  String Term Term
-             | TAs   Type   Term
+             | Term  :@:   Term
+             | Lam   Type  Term
+             | TLet  Term  Term
+             | TAs   Type  Term
              deriving (Show, Eq)
 
   -- Valores
