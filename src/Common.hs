@@ -21,7 +21,7 @@ module Common where
   data Type = BaseT
             | UnitT
             | TupT  Type  Type
-            | FunT   Type  Type
+            | FunT  Type  Type
             deriving (Show, Eq)
 
   -- Términos con nombres
@@ -32,23 +32,27 @@ module Common where
                 |  Let  String   LamTerm  LamTerm
                 |  As   Type     LamTerm
                 |  Tup  LamTerm  LamTerm
+                |  Fst  LamTerm
+                |  Snd  LamTerm
                 deriving (Show, Eq)
 
   -- Términos localmente sin nombres
   data Term  = TUnit
              | TBound Int
              | TFree  Name
-             | Term  :@:   Term
+             | Term   :@:   Term
              | TLam   Type  Term
-             | TLet  Term  Term
-             | TAs   Type  Term
-             | TTup  Term  Term
+             | TLet   Term  Term
+             | TAs    Type  Term
+             | TTup   Term  Term
+             | TFst   Term
+             | TSnd   Term
              deriving (Show, Eq)
 
   -- Valores
-  data Value = VLam Type Term
-             | VUnit
-             | VTup
+  data Value = VUnit
+             | VLam  Type  Term
+             | VTup  Value Value
 
   -- Contextos del tipado
   type Context = [Type]

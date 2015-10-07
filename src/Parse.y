@@ -19,17 +19,20 @@ import Data.Char
     ':'     { TokColon  }
     '\\'    { TokAbs    }
     '.'     { TokDot    }
+    ','     { TokComma  }
     '('     { TokOpen   }
     ')'     { TokClose  }
     '->'    { TokArrow  }
     VAR     { TokVar $$ }
-    TYPE    { TokType   }
+    BASET   { TokBaseT  }
     DEF     { TokDef    }
     LET     { TokLet    }
     IN      { TokIn     }
     AS      { TokAs     }
     UNIT    { TokUnit   }
     UNITT   { TokUnitT  }
+    FST     { TokFst    }
+    SND     { TokSnd    }
 
 
 %right VAR
@@ -53,6 +56,9 @@ Exp     :: { LamTerm }
         | NAbs                            { $1 }
         | LET VAR '=' Exp IN Exp          { Let $2 $4 $6 }
         | Exp AS Type                     { As $3 $1 }
+        | '(' Exp ',' Exp ')'             { Tup $2 $4 }
+        | FST Exp                         { Fst $2 }
+        | SND Exp                         { Snd $2 }
 
 NAbs    :: { LamTerm }
         : NAbs Atom                       { App $1 $2 }
@@ -63,9 +69,10 @@ Atom    :: { LamTerm }
         | UNIT                            { Unit }
         | '(' Exp ')'                     { $2 }
 
-Type    : TYPE                            { BaseT }
+Type    : BASET                           { BaseT }
         | UNITT                           { UnitT }
         | Type '->' Type                  { FunT $1 $3 }
+        | '(' Type ',' Type')'            { TupT $2 $4 }
         | '(' Type ')'                    { $2 }
 
 Defs    : Defexp Defs                     { $1 : $2 }
@@ -103,10 +110,11 @@ happyError :: P a
 happyError = \s i -> Failed $ "Linea " ++ (show (i::LineNumber)) ++ ": Error de parseo \n" ++ (s)
 
 data Token = TokVar String
-           | TokType
+           | TokBaseT
            | TokDef
            | TokAbs
            | TokDot
+           | TokComma
            | TokOpen
            | TokClose
            | TokColon
@@ -118,6 +126,8 @@ data Token = TokVar String
            | TokAs
            | TokUnit
            | TokUnitT
+           | TokFst
+           | TokSnd
            deriving Show
 
 ----------------------------------
@@ -130,6 +140,7 @@ lexer cont s =
         ('-':('>':cs))     -> cont TokArrow  cs
         ('\\':cs)          -> cont TokAbs    cs
         ('.':cs)           -> cont TokDot    cs
+        (',':cs)           -> cont TokComma  cs
         ('(':cs)           -> cont TokOpen   cs
         ('-':('>':cs))     -> cont TokArrow  cs
         (')':cs)           -> cont TokClose  cs
@@ -147,9 +158,11 @@ lexer cont s =
                    ("let",  rest) -> cont TokLet       rest
                    ("in",   rest) -> cont TokIn        rest
                    ("as",   rest) -> cont TokAs        rest
-                   ("B",    rest) -> cont TokType      rest
+                   ("B",    rest) -> cont TokBaseT     rest
                    ("Unit", rest) -> cont TokUnitT     rest
                    ("unit", rest) -> cont TokUnit      rest
+                   ("fst",  rest) -> cont TokFst       rest
+                   ("snd",  rest) -> cont TokSnd       rest
                    (var,    rest) -> cont (TokVar var) rest
          consumirBK anidado cl cont s =
              case s of
