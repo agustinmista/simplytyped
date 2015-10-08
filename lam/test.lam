@@ -1,3 +1,4 @@
 --  Funciones de prueba
 def suma = \m:Nat.\n:Nat. R m (\r:Nat.\p:Nat. suc r) n
 def prod = \m:Nat.\n:Nat. R 0 (\r:Nat.\p:Nat. suma r n) m
+def pred = \n:Nat. R 0 (\r:Nat.\p:Nat. p) n
