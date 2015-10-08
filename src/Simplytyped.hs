@@ -17,12 +17,12 @@ conversion :: LamTerm -> Term
 conversion = conversion' []
 
 conversion' :: [String] -> LamTerm -> Term
-conversion' b Unit        = TUnit
 conversion' b (LVar n)    = maybe (TFree (Global n)) TBound (n `elemIndex` b)
 conversion' b (App t u)   = conversion' b t :@: conversion' b u
 conversion' b (Abs n t u) = TLam t (conversion' (n:b) u)
 conversion' b (Let x u v) = TLet (conversion' b u) (conversion' (x:b) v)
 conversion' b (As t u)    = TAs t (conversion' b u)
+conversion' b Unit        = TUnit
 conversion' b (Tup u v)   = TTup (conversion' b u) (conversion' b v)
 conversion' b (Fst u)     = TFst (conversion' b u)
 conversion' b (Snd u)     = TSnd (conversion' b u)
@@ -53,35 +53,36 @@ sub i t (TRec u v w) = TRec (sub i t u) (sub i t v) (sub i t w)
 
 -- evaluador de términos
 eval :: NameEnv Value Type -> Term -> Value
-eval _ (TBound _)              = error "variable ligada inesperada en eval"
-eval e (TFree n)               = fst $ fromJust $ lookup n e
-eval _ (TLam t u)              = VLam t u
+eval _ (TBound _)       = error "variable ligada inesperada en eval"
+eval e (TFree n)        = fst $ fromJust $ lookup n e
+eval e (TLet u v)       = let u' = eval e u in eval e (sub 0 (quote u') v)
+eval _ (TLam t u)       = VLam t u
+eval e (TAs t u)        = eval e u
 eval e (TLam _ u :@: TLam s v) = eval e (sub 0 (TLam s v) u)
-eval e (TLam t u :@: v)        = case eval e v of
-                                    v'@(VLam _ _) -> eval e (TLam t u :@: (quote v'))
-                                    v'            -> eval e (sub 0 (quote v') u)
-eval e (u :@: v)               = case eval e u of
-                                    VLam t u' -> eval e (TLam t u' :@: v)
-                                    _         -> error "Error de tipo en run-time, se esperaba Lam"
-eval e (TLet u v)              = let u' = eval e u in eval e (sub 0 (quote u') v)
-eval e (TAs t u)               = eval e u
-eval _ TUnit                   = VUnit
-eval e (TTup u v)              = let u' = eval e u in VTup u' (eval e v)
-eval e (TFst u)                = case eval e u of
-                                    (VTup v1 v2) -> v1
-                                    _            -> error "Error de tipo en run-time, se esperaba Tup"
-eval e (TSnd u)                = case eval e u of
-                                    (VTup v1 v2) -> v2
-                                    _            -> error "Error de tipo en run-time, se esperaba Tup"
-eval e TZero                   = VNat Z
-eval e (TSuc u)                = case eval e u of
-                                    (VNat n) -> VNat $ S n
-                                    _        -> error "Error de tipo en run-time, se esperaba Nat"
-eval e (TRec u v w)            = case eval e w of
-                                    (VNat n) -> case n of
-                                                   Z     -> eval e u
-                                                   (S n) -> eval e ((v :@: (TRec u v (quote (VNat n)))) :@: w)
-                                    _        -> error "Error de tipo en run-time, se esperaba Nat"
+eval e (TLam t u :@: v) = case eval e v of
+                             v'@(VLam _ _) -> eval e (TLam t u :@: (quote v'))
+                             v'            -> eval e (sub 0 (quote v') u)
+eval e (u :@: v)        = case eval e u of
+                             VLam t u' -> eval e (TLam t u' :@: v)
+                             _         -> error "Error de tipo en run-time, se esperaba Lam"
+eval _ TUnit            = VUnit
+eval e (TTup u v)       = let u' = eval e u in VTup u' (eval e v)
+eval e (TFst u)         = case eval e u of
+                             (VTup v1 v2) -> v1
+                             _            -> error "Error de tipo en run-time, se esperaba Tup"
+eval e (TSnd u)         = case eval e u of
+                             (VTup v1 v2) -> v2
+                             _            -> error "Error de tipo en run-time, se esperaba Tup"
+eval e TZero            = VNat Z
+eval e (TSuc u)         = case eval e u of
+                             (VNat n) -> VNat $ S n
+                             _        -> error "Error de tipo en run-time, se esperaba Nat"
+eval e (TRec z f t)     = case eval e t of
+                             (VNat n) -> case n of
+                                            Z     -> eval e z
+                                            (S n) -> let pd = quote (VNat n)
+                                                     in eval e ((f :@: (TRec z f pd)) :@: pd)
+                             _        -> error "Error de tipo en run-time, se esperaba Nat"
 
 
 -----------------------
@@ -169,8 +170,8 @@ err = Left
 
 -- fcs. de error
 matchError :: Type -> Type -> Either String Type
-matchError t1 t2 = err $ "\n  Tipo esperado: '"  ++ render (printType t1) ++
-                        "'\n  Tipo inferido: '"  ++ render (printType t2) ++ "'"
+matchError t1 t2 = err $ "\n  Tipo esperado: '"  ++ render (printType t1) ++ "'" ++
+                         "\n  Tipo inferido: '"  ++ render (printType t2) ++ "'"
 
 notfunError :: Type -> Either String Type
 notfunError t1 = err $ render (printType t1) ++ " no puede ser aplicado."
