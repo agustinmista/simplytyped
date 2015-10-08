@@ -26,7 +26,9 @@ conversion' b (As t u)    = TAs t (conversion' b u)
 conversion' b (Tup u v)   = TTup (conversion' b u) (conversion' b v)
 conversion' b (Fst u)     = TFst (conversion' b u)
 conversion' b (Snd u)     = TSnd (conversion' b u)
-
+conversion' b Zero        = TZero
+conversion' b (Suc u)     = TSuc (conversion' b u)
+conversion' b (Rec u v w) = TRec (conversion' b u) (conversion' b v) (conversion' b w)
 
 -----------------------
 --- eval
@@ -34,47 +36,63 @@ conversion' b (Snd u)     = TSnd (conversion' b u)
 
 -- substitucion de términos
 sub :: Int -> Term -> Term -> Term
-sub i t (TBound j)  = if i == j then t else TBound j
-sub _ _ TUnit       = TUnit
-sub _ _ (TFree n)   = TFree n
-sub i t (u :@: v)   = sub i t u :@: sub i t v
-sub i t (TLam t' u) = TLam t' (sub (i+1) t u)
-sub i t (TLet u v)  = TLet (sub i t u) (sub (i+1) t v)
-sub i t (TAs t' u)  = TAs t' (sub i t u)
-sub i t (TTup u v)  = TTup (sub i t u) (sub i t v)
-sub i t (TFst u)    = TFst (sub i t u)
-sub i t (TSnd u)    = TSnd (sub i t u)
+sub i t (TBound j)   = if i == j then t else TBound j
+sub _ _ (TFree n)    = TFree n
+sub i t (u :@: v)    = sub i t u :@: sub i t v
+sub i t (TLam t' u)  = TLam t' (sub (i+1) t u)
+sub i t (TLet u v)   = TLet (sub i t u) (sub (i+1) t v)
+sub i t (TAs t' u)   = TAs t' (sub i t u)
+sub _ _ TUnit        = TUnit
+sub i t (TTup u v)   = TTup (sub i t u) (sub i t v)
+sub i t (TFst u)     = TFst (sub i t u)
+sub i t (TSnd u)     = TSnd (sub i t u)
+sub i t TZero        = TZero
+sub i t (TSuc u)     = TSuc (sub i t u)
+sub i t (TRec u v w) = TRec (sub i t u) (sub i t v) (sub i t w)
 
 
 -- evaluador de términos
 eval :: NameEnv Value Type -> Term -> Value
-eval _ TUnit                   = VUnit
 eval _ (TBound _)              = error "variable ligada inesperada en eval"
 eval e (TFree n)               = fst $ fromJust $ lookup n e
 eval _ (TLam t u)              = VLam t u
 eval e (TLam _ u :@: TLam s v) = eval e (sub 0 (TLam s v) u)
 eval e (TLam t u :@: v)        = case eval e v of
-                                    v'@(VLam t' u') -> eval e (TLam t u :@: (quote v'))
-                                    v'              -> eval e (sub 0 (quote v') u)
-eval e (u :@: v)               = let u' = eval e u in eval e (sub 0 (quote u') v)
+                                    v'@(VLam _ _) -> eval e (TLam t u :@: (quote v'))
+                                    v'            -> eval e (sub 0 (quote v') u)
+eval e (u :@: v)               = case eval e u of
+                                    VLam t u' -> eval e (TLam t u' :@: v)
+                                    _         -> error "Error de tipo en run-time, se esperaba Lam"
 eval e (TLet u v)              = let u' = eval e u in eval e (sub 0 (quote u') v)
 eval e (TAs t u)               = eval e u
+eval _ TUnit                   = VUnit
 eval e (TTup u v)              = let u' = eval e u in VTup u' (eval e v)
 eval e (TFst u)                = case eval e u of
                                     (VTup v1 v2) -> v1
-                                    _            -> error "Error de tipo en run-time, verificar type checker"
+                                    _            -> error "Error de tipo en run-time, se esperaba Tup"
 eval e (TSnd u)                = case eval e u of
                                     (VTup v1 v2) -> v2
-                                    _            -> error "Error de tipo en run-time, verificar type checker"
+                                    _            -> error "Error de tipo en run-time, se esperaba Tup"
+eval e TZero                   = VNat Z
+eval e (TSuc u)                = case eval e u of
+                                    (VNat n) -> VNat $ S n
+                                    _        -> error "Error de tipo en run-time, se esperaba Nat"
+eval e (TRec u v w)            = case eval e w of
+                                    (VNat n) -> case n of
+                                                   Z     -> eval e u
+                                                   (S n) -> eval e ((v :@: (TRec u v (quote (VNat n)))) :@: w)
+                                    _        -> error "Error de tipo en run-time, se esperaba Nat"
+
 
 -----------------------
 --- quoting
 -----------------------
-
 quote :: Value -> Term
-quote VUnit      = TUnit
-quote (VLam t f) = TLam t f
-quote (VTup u v) = TTup (quote u) (quote v)
+quote (VLam t f)   = TLam t f
+quote VUnit        = TUnit
+quote (VTup u v)   = TTup (quote u) (quote v)
+quote (VNat Z)     = TZero
+quote (VNat (S n)) = TSuc (quote (VNat n))
 
 ----------------------
 --- type checker
@@ -85,7 +103,6 @@ infer :: NameEnv Value Type -> Term -> Either String Type
 infer = infer' []
 
 infer' :: Context -> NameEnv Value Type -> Term -> Either String Type
-infer' _ _ TUnit       = ret UnitT
 infer' c _ (TBound i)   = ret (c !! i)
 infer' _ e (TFree n)    = case lookup n e of
                             Nothing    -> notfoundError n
@@ -97,12 +114,13 @@ infer' c e (t :@: u)    = do tt <- infer' c e t
                                              then ret t2
                                              else matchError t1 tu
                                 _         -> notfunError tt
-infer' c e (TLam t u)    = do tu <- infer' (t:c) e u
-                              ret $ FunT t tu
+infer' c e (TLam t u)   = do tu <- infer' (t:c) e u
+                             ret $ FunT t tu
 infer' c e (TLet u v)   = do tu <- infer' c e u
                              infer' (tu:c) e v
 infer' c e (TAs t u)    = do tu <- infer' c e u
                              if t == tu then ret tu else matchError t tu
+infer' _ _ TUnit        = ret UnitT
 infer' c e (TTup u v)   = do tu <- infer' c e u
                              tv <- infer' c e v
                              ret $ TupT tu tv
@@ -115,7 +133,31 @@ infer' c e (TSnd u)     = do tu <- infer' c e u
                                 (TupT tu tv) -> ret tv
                                 t            -> nottupError t
 
+infer' c e TZero        = ret NatT
+infer' c e (TSuc u)     = do tu <- infer' c e u
+                             case tu of
+                                NatT -> ret NatT
+                                t    -> matchError NatT t
+infer' c e (TRec u f n) = do tu <- infer' c e u
+                             tf <- infer' c e f
+                             tn <- infer' c e n
+                             case tn of
+                                NatT -> checkfType tu tf
+                                t    -> matchError (rType t) (FunT tu  (FunT tf (FunT t tu)))
+
 -- definiciones auxiliares
+rType :: Type -> Type
+rType t = (FunT t (FunT (fType t) (FunT NatT t)))
+
+fType :: Type -> Type
+fType t = (FunT t (FunT NatT t))
+
+checkfType :: Type -> Type -> Either String Type
+checkfType t tf = if tf == (fType t)
+                  then ret $ t
+                  else matchError (rType t) (FunT t (FunT tf (FunT NatT t)))
+
+
 ret :: Type -> Either String Type
 ret = Right
 
@@ -127,16 +169,15 @@ err = Left
 
 -- fcs. de error
 matchError :: Type -> Type -> Either String Type
-matchError t1 t2 = err $ "se esperaba " ++ render (printType t1) ++
-                         ", pero "      ++ render (printType t2) ++
-                         " fue inferido."
+matchError t1 t2 = err $ "\n  Tipo esperado: '"  ++ render (printType t1) ++
+                        "'\n  Tipo inferido: '"  ++ render (printType t2) ++ "'"
 
 notfunError :: Type -> Either String Type
 notfunError t1 = err $ render (printType t1) ++ " no puede ser aplicado."
 
 nottupError :: Type -> Either String Type
-nottupError t = err $ "se esperaba (a, b), pero " ++ render (printType t) ++
-                      " fue inferido."
+nottupError t = err $ "\n  Tipo esperado: '(a, b)'\n  Tipo inferido: '" ++
+                            render (printType t) ++ "'"
 
 notfoundError :: Name -> Either String Type
 notfoundError n = err $ show n ++ " no está definida."

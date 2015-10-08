@@ -20,9 +20,15 @@ module Common where
   -- Tipo de los tipos
   data Type = BaseT
             | UnitT
+            | NatT
             | TupT  Type  Type
             | FunT  Type  Type
             deriving (Show, Eq)
+
+  -- Naturales
+  data Nat = Z
+           | S Nat
+           deriving (Show, Eq)
 
   -- Términos con nombres
   data LamTerm  =  Unit
@@ -34,6 +40,9 @@ module Common where
                 |  Tup  LamTerm  LamTerm
                 |  Fst  LamTerm
                 |  Snd  LamTerm
+                |  Zero
+                |  Suc  LamTerm
+                |  Rec  LamTerm  LamTerm LamTerm
                 deriving (Show, Eq)
 
   -- Términos localmente sin nombres
@@ -47,12 +56,17 @@ module Common where
              | TTup   Term  Term
              | TFst   Term
              | TSnd   Term
+             | TZero
+             | TSuc   Term
+             | TRec   Term  Term  Term
              deriving (Show, Eq)
 
   -- Valores
-  data Value = VUnit
-             | VLam  Type  Term
+  data Value = VLam  Type  Term
+             | VUnit
              | VTup  Value Value
+             | VNat  Nat
+             deriving Show
 
   -- Contextos del tipado
   type Context = [Type]

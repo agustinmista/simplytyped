@@ -10,7 +10,7 @@ module Main where
   import Data.Char
   import Data.List
   import Data.Maybe
-  import Prelude hiding (print, catch)
+  import Prelude hiding ( catch)
   import System.Console.Readline
   import System.Environment
   import System.IO hiding (print)
@@ -20,14 +20,14 @@ module Main where
   import PrettyPrinter
   import Simplytyped
   import Parse hiding (Token)
-  
+
 ---------------------
 --- Interpreter
 ---------------------
 
   main :: IO ()
   main = do args <- getArgs
-            readevalprint args (S True "" [])
+            readevalprint args (State True "" [])
 
   ioExceptionCatcher :: IOException -> IO (Maybe a)
   ioExceptionCatcher _ = return Nothing
@@ -37,14 +37,14 @@ module Main where
   iprompt = "ST> "
 
 
-  data State = S { inter :: Bool,       -- True, si estamos en modo interactivo.
+  data State = State { inter :: Bool,       -- True, si estamos en modo interactivo.
                    lfile :: String,     -- Ultimo archivo cargado (para hacer "reload")
                    ve :: NameEnv Value Type  -- Entorno con variables globales y su valor  [(Name, (Value, Type))]
                  }
 
   --  read-eval-print loop
   readevalprint :: [String] -> State -> IO ()
-  readevalprint args state@(S {..}) =
+  readevalprint args state@(State {..}) =
     let rec st =
           do
             mx <- catch
@@ -103,7 +103,7 @@ module Main where
          return (Compile (CompileInteractive x))
 
   handleCommand :: State -> Command -> IO (Maybe State)
-  handleCommand state@(S {..}) cmd =
+  handleCommand state@(State {..}) cmd =
       case cmd of
          Quit       ->  when (not inter) (putStrLn "!@#$^&*") >> return Nothing
          Noop       ->  return (Just state)
@@ -158,7 +158,7 @@ module Main where
 
 
   compileFile :: State -> String -> IO State
-  compileFile state@(S {..}) f =
+  compileFile state@(State {..}) f =
       do putStrLn ("Abriendo " ++ f ++ "...")
          let f' = reverse(dropWhile isSpace (reverse f))
          x  <- catch (readFile f')
@@ -215,6 +215,11 @@ module Main where
                                                     if i == it
                                                     then render (printTerm (quote v))
                                                     else render (text i)
+                                            --  putStr "Value:  "  -- Debug
+                                            --  print v            -- Debug
+                                            --  putStr "Term:   "  -- Debug
+                                            --  print (quote v)    -- Debug
+                                            --  putStr "Lambda: "  -- Debug
                                              putStrLn outtext
                 return (state { ve = (Global i, (v, ty)) : ve state})
 

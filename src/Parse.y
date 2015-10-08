@@ -33,6 +33,10 @@ import Data.Char
     UNITT   { TokUnitT  }
     FST     { TokFst    }
     SND     { TokSnd    }
+    NATT    { TokNatT   }
+    ZERO    { TokZero   }
+    SUC     { TokSuc    }
+    REC     { TokRec    }
 
 
 %right VAR
@@ -52,13 +56,14 @@ Def     :  Defexp                         { $1 }
 Defexp  : DEF VAR '=' Exp                 { Def $2 $4 }
 
 Exp     :: { LamTerm }
-        : '\\' VAR ':' Type '.' Exp       { Abs $2 $4 $6 }
-        | NAbs                            { $1 }
+        : NAbs                            { $1 }
+        | '\\' VAR ':' Type '.' Exp       { Abs $2 $4 $6 }
         | LET VAR '=' Exp IN Exp          { Let $2 $4 $6 }
         | Exp AS Type                     { As $3 $1 }
-        | '(' Exp ',' Exp ')'             { Tup $2 $4 }
         | FST Exp                         { Fst $2 }
         | SND Exp                         { Snd $2 }
+        | SUC Exp                         { Suc $2 }
+        | REC Atom Atom Exp               { Rec $2 $3 $4 }
 
 NAbs    :: { LamTerm }
         : NAbs Atom                       { App $1 $2 }
@@ -67,10 +72,13 @@ NAbs    :: { LamTerm }
 Atom    :: { LamTerm }
         : VAR                             { LVar $1 }
         | UNIT                            { Unit }
+        | ZERO                            { Zero }
         | '(' Exp ')'                     { $2 }
+        | '(' Exp ',' Exp ')'             { Tup $2 $4 }
 
 Type    : BASET                           { BaseT }
         | UNITT                           { UnitT }
+        | NATT                            { NatT }
         | Type '->' Type                  { FunT $1 $3 }
         | '(' Type ',' Type')'            { TupT $2 $4 }
         | '(' Type ')'                    { $2 }
@@ -128,6 +136,10 @@ data Token = TokVar String
            | TokUnitT
            | TokFst
            | TokSnd
+           | TokNatT
+           | TokZero
+           | TokSuc
+           | TokRec
            deriving Show
 
 ----------------------------------
@@ -137,6 +149,7 @@ lexer cont s =
         ('\n':s)           -> \line -> lexer cont s (line + 1)
         (c:cs) | isSpace c -> lexer cont cs
                | isAlpha c -> lexVar (c:cs)
+        ('0':cs)           -> cont TokZero   cs
         ('-':('>':cs))     -> cont TokArrow  cs
         ('\\':cs)          -> cont TokAbs    cs
         ('.':cs)           -> cont TokDot    cs
@@ -150,20 +163,23 @@ lexer cont s =
         ('{':('-':cs))     -> consumirBK 0 0 cont cs
         ('-':('}':cs))     -> \line -> Failed $ "Linea " ++ (show line) ++ ": Comentario no abierto"
         unknown            -> \line -> Failed $ "Linea " ++ (show line) ++ ": No se puede reconocer "
-                                                ++ (show $ take 10 unknown) ++ "..."
+                                                         ++ (show $ take 10 unknown) ++ "..."
     where
          lexVar cs =
              case span isAlpha cs of
-                   ("def",  rest) -> cont TokDef       rest
-                   ("let",  rest) -> cont TokLet       rest
-                   ("in",   rest) -> cont TokIn        rest
-                   ("as",   rest) -> cont TokAs        rest
-                   ("B",    rest) -> cont TokBaseT     rest
-                   ("Unit", rest) -> cont TokUnitT     rest
-                   ("unit", rest) -> cont TokUnit      rest
-                   ("fst",  rest) -> cont TokFst       rest
-                   ("snd",  rest) -> cont TokSnd       rest
-                   (var,    rest) -> cont (TokVar var) rest
+                ("def",  rest) -> cont TokDef       rest
+                ("let",  rest) -> cont TokLet       rest
+                ("in",   rest) -> cont TokIn        rest
+                ("as",   rest) -> cont TokAs        rest
+                ("B",    rest) -> cont TokBaseT     rest
+                ("Unit", rest) -> cont TokUnitT     rest
+                ("unit", rest) -> cont TokUnit      rest
+                ("fst",  rest) -> cont TokFst       rest
+                ("snd",  rest) -> cont TokSnd       rest
+                ("Nat", rest)  -> cont TokNatT      rest
+                ("suc",  rest) -> cont TokSuc       rest
+                ("R",    rest) -> cont TokRec       rest
+                (var,    rest) -> cont (TokVar var) rest
          consumirBK anidado cl cont s =
              case s of
                 ('-':('-':cs)) -> consumirBK anidado cl cont $ dropWhile ((/=) '\n') cs
