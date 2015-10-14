@@ -60,9 +60,9 @@ Exp     :: { LamTerm }
         | '\\' VAR ':' Type '.' Exp       { Abs $2 $4 $6 }
         | LET VAR '=' Exp IN Exp          { Let $2 $4 $6 }
         | Exp AS Type                     { As $3 $1 }
-        | FST Exp                         { Fst $2 }
-        | SND Exp                         { Snd $2 }
-        | SUC Exp                         { Suc $2 }
+        | FST Atom                        { Fst $2 }
+        | SND Atom                        { Snd $2 }
+        | SUC Atom                        { Suc $2 }
         | REC Atom Atom Exp               { Rec $2 $3 $4 }
 
 NAbs    :: { LamTerm }

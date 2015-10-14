@@ -66,9 +66,7 @@ eval e (u :@: v)        = case eval e u of
                              VLam t u' -> eval e (TLam t u' :@: v)
                              _         -> runtimeError "Fun"
 eval _ TUnit            = VUnit
-eval e (TTup u v)       = let u' = eval e u in VTup u' (eval e v)
--- eval e (TTup u v)       = case eval e u of
---                              u' -> VTup u' (eval e v)        -- preguntar!
+eval e (TTup u v)       = VTup (eval e u) (eval e v)
 eval e (TFst u)         = case eval e u of
                              (VTup v1 v2) -> v1
                              _            -> runtimeError "Tup"
@@ -89,6 +87,7 @@ eval e (TRec z f t)     = case eval e t of
 
 runtimeError :: String -> Value
 runtimeError t = error $ "Error de tipo en run-time, se esperaba " ++ t
+
 
 -----------------------
 --- quoting
@@ -138,7 +137,6 @@ infer' c e (TSnd u)     = do tu <- infer' c e u
                              case tu of
                                 (TupT tu tv) -> ret tv
                                 t            -> nottupError t
-
 infer' c e TZero        = ret NatT
 infer' c e (TSuc u)     = do tu <- infer' c e u
                              case tu of
