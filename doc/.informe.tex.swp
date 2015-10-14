@@ -1,0 +1,145 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr, float, graphicx, caption}
+\usepackage{amsmath, amssymb}
+\usepackage{bm}
+\usepackage[margin=1in]{geometry}
+\usepackage{multicol}
+\usepackage{proof}
+\usepackage{titlesec} 
+
+\setlength{\inferLineSkip}{4pt}
+
+\titleformat{\subsection}[runin]
+  {\normalfont\large\bfseries}{\thesubsection}{1em}{}	
+\titleformat{\subsubsection}[runin]
+  {\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+
+\pagestyle{fancy}
+\renewcommand{\figurename}{Figura}
+\renewcommand\abstractname{\textit{Abstract}}
+
+\fancyhf{}
+\fancyhead[LE,RO]{\textit{Intérprete de Cálculo Lambda Simple Tipado}}
+\fancyfoot[RE,CO]{\thepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{
+	%Logo UNR
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[scale=1]{unr.png}
+		\label{}
+	\end{figure}
+	% Pie Logo
+	\normalsize
+		\textsc{Universidad Nacional de Rosario}\\	
+		\textsc{Facultad de Ciencias Exactas, Ingeniería y Agrimensura}\\
+		\textit{Licenciatura en Ciencias de la Computación}\\
+		\textit{Análisis de Lenguajes de Programación}\\
+	% Título
+	\vspace{30pt}
+	\hrule{}
+	\vspace{15pt}
+	\Large
+		\textbf{Intérprete de Cálculo Lambda Simple Tipado}\\
+	\vspace{15pt}
+	\hrule{}
+	\vspace{30pt}
+	% Alumnos/docentes
+	\begin{multicols}{2}
+	\raggedright
+		\large
+			\textbf{Alumnos:}\\
+		\normalsize
+			CRESPO, Lisandro (C-6165/4) \\
+			MISTA, Agustín (M-6105/1) \\
+			$\;$ \\
+			$\;$ \\
+	\raggedleft
+		\large
+			\textbf{Docentes:}\\
+		\normalsize
+			JASKELIOFF, Mauro\\
+			SIMICH, Eugenia\\
+			MANZINO, Cecilia\\
+			RABASEDAS, Juan Manuel\\
+	\end{multicols}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\date{14 de Octubre de 2015}
+\maketitle
+
+\pagebreak
+%----------------------------------------------------------
+\subsection*{Ejercicio 1} 
+	\emph{Algo algo}
+	\\
+	\begin{align*}
+		\infer[regla]{
+			abajo
+		}{
+			arriba
+		}
+	\end{align*}
+%----------------------------------------------------------
+\subsection*{Ejercicio 2} 
+	\emph{Explicación y cositas}
+	\\
+%----------------------------------------------------------
+\subsection*{Ejercicio 5} 
+	\emph{Algo algo}
+	\\
+	\begin{align*}
+		\infer[regla]{
+			abajo
+		}{
+			arriba
+		}
+	\end{align*}
+%----------------------------------------------------------
+\subsection*{Ejercicio 7} 
+	\emph{Algo algo}
+	\\
+	\begin{align*}
+		\infer[regla1]{
+			abajo
+		}{
+			arriba
+		}
+	\end{align*}
+	\begin{align*}
+		\infer[regla2]{
+			abajo
+		}{
+			arriba
+		}
+	\end{align*}
+%----------------------------------------------------------
+\subsection*{Ejercicio 9} 
+	\emph{Algo algo}
+	\\
+	\begin{align*}
+		\infer[regla1]{
+			abajo
+		}{
+			arriba
+		}
+	\end{align*}
+\pagebreak  %Ver si es necesario
+\\
+\vspace{\fill}
+\begin{multicols}{2}
+	\hrule
+	\vspace{5pt}
+	CRESPO, Lisandro \\
+	\linebreak
+	\hrule
+	\vspace{5pt}
+	MISTA, Agustín \\
+\end{multicols}
+
+\end{document}
