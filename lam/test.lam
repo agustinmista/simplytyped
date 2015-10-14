@@ -7,4 +7,3 @@ def pred = \n:Nat. R 0 (\r:Nat.\p:Nat. p) n
 def true = suc 0
 def false = 0
 def isZero = \n:Nat. R true (\r:Nat. \p:Nat. false) n
--- def eq = \m:Nat. \n:Nat. R (isZero n) (\r:Nat. \p:Nat. m
