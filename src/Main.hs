@@ -38,9 +38,9 @@ module Main where
 
 
   data State = State { inter :: Bool,       -- True, si estamos en modo interactivo.
-                   lfile :: String,     -- Ultimo archivo cargado (para hacer "reload")
-                   ve :: NameEnv Value Type  -- Entorno con variables globales y su valor  [(Name, (Value, Type))]
-                 }
+                       lfile :: String,     -- Ultimo archivo cargado (para hacer "reload")
+                       ve :: NameEnv Value Type  -- Entorno con variables globales y su valor  [(Name, (Value, Type))]
+                     }
 
   --  read-eval-print loop
   readevalprint :: [String] -> State -> IO ()
@@ -215,11 +215,6 @@ module Main where
                                                     if i == it
                                                     then render (printTerm (quote v))
                                                     else render (text i)
-                                            --  putStr "Value:  "  -- Debug
-                                            --  print v            -- Debug
-                                            --  putStr "Term:   "  -- Debug
-                                            --  print (quote v)    -- Debug
-                                            --  putStr "Lambda: "  -- Debug
                                              putStrLn outtext
                 return (state { ve = (Global i, (v, ty)) : ve state})
 

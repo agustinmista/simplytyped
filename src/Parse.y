@@ -37,6 +37,7 @@ import Data.Char
     ZERO    { TokZero   }
     SUC     { TokSuc    }
     REC     { TokRec    }
+    NUM     { TokNum $$ }
 
 
 %right VAR
@@ -72,6 +73,7 @@ NAbs    :: { LamTerm }
 Atom    :: { LamTerm }
         : VAR                             { LVar $1 }
         | UNIT                            { Unit }
+        | NUM                             { numToLam (read $1) }
         | ZERO                            { Zero }
         | '(' Exp ')'                     { $2 }
         | '(' Exp ',' Exp ')'             { Tup $2 $4 }
@@ -118,6 +120,7 @@ happyError :: P a
 happyError = \s i -> Failed $ "Linea " ++ (show (i::LineNumber)) ++ ": Error de parseo \n" ++ (s)
 
 data Token = TokVar String
+           | TokNum String
            | TokBaseT
            | TokDef
            | TokAbs
@@ -148,8 +151,8 @@ lexer cont s =
         []                 -> cont TokEOF []
         ('\n':s)           -> \line -> lexer cont s (line + 1)
         (c:cs) | isSpace c -> lexer cont cs
-               | isAlpha c -> lexVar (c:cs)
-        ('0':cs)           -> cont TokZero   cs
+               | isAlpha c -> lexVar   (c:cs)
+               | isDigit c -> lexDigit (c:cs)
         ('-':('>':cs))     -> cont TokArrow  cs
         ('\\':cs)          -> cont TokAbs    cs
         ('.':cs)           -> cont TokDot    cs
@@ -180,6 +183,8 @@ lexer cont s =
                 ("suc",  rest) -> cont TokSuc       rest
                 ("R",    rest) -> cont TokRec       rest
                 (var,    rest) -> cont (TokVar var) rest
+         lexDigit cs = let (n, rest) = span isDigit cs
+                       in cont (TokNum n) rest
          consumirBK anidado cl cont s =
              case s of
                 ('-':('-':cs)) -> consumirBK anidado cl cont $ dropWhile ((/=) '\n') cs
@@ -189,6 +194,9 @@ lexer cont s =
                                          _ -> consumirBK (anidado-1) cl cont cs
                 ('\n':cs) -> consumirBK anidado (cl+1) cont cs
                 (_:cs) -> consumirBK anidado cl cont cs
+
+numToLam 0 = Zero
+numToLam n = Suc (numToLam (n-1))
 
 stmts_parse s = parseStmts s 1
 stmt_parse s  = parseStmt s 1

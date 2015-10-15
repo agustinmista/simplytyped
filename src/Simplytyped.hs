@@ -62,32 +62,18 @@ eval e (TLam _ u :@: TLam s v) = eval e (sub 0 (TLam s v) u)
 eval e (TLam t u :@: v) = case eval e v of
                              v'@(VLam _ _) -> eval e (TLam t u :@: (quote v'))
                              v'            -> eval e (sub 0 (quote v') u)
-eval e (u :@: v)        = case eval e u of
-                             VLam t u' -> eval e (TLam t u' :@: v)
-                             _         -> runtimeError "Fun"
+eval e (u :@: v)        = let u' = eval e u in eval e ((quote u') :@: v)
 eval _ TUnit            = VUnit
 eval e (TTup u v)       = VTup (eval e u) (eval e v)
-eval e (TFst u)         = case eval e u of
-                             (VTup v1 v2) -> v1
-                             _            -> runtimeError "Tup"
-eval e (TSnd u)         = case eval e u of
-                             (VTup v1 v2) -> v2
-                             _            -> runtimeError "Tup"
+eval e (TFst u)         = let VTup v1 v2 = eval e u in v1
+eval e (TSnd u)         = let VTup v1 v2 = eval e u in v2
 eval e TZero            = VNat Z
-eval e (TSuc u)         = case eval e u of
-                             (VNat n) -> VNat $ S n
-                             _        -> runtimeError "Nat"
-eval e (TRec z f t)     = case eval e t of
-                             (VNat n) -> case n of
-                                            Z     -> eval e z
-                                            (S n) -> let pd = quote (VNat n)
-                                                     in eval e ((f :@: (TRec z f pd)) :@: pd)
-                             _        -> runtimeError "Nat"
-
-
-runtimeError :: String -> Value
-runtimeError t = error $ "Error de tipo en run-time, se esperaba " ++ t
-
+eval e (TSuc u)         = let VNat n = eval e u in VNat $ S n
+eval e (TRec z f t)     = let VNat n = eval e t
+                          in case n of
+                                Z     -> eval e z
+                                (S n) -> let pd = quote (VNat n)
+                                        in eval e ((f :@: (TRec z f pd)) :@: pd)
 
 -----------------------
 --- quoting
