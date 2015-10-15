@@ -6,7 +6,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{multicol}
 \usepackage{proof}
-\usepackage{titlesec} 
+\usepackage{titlesec}
 
 \setlength{\inferLineSkip}{4pt}
 
@@ -76,57 +76,203 @@
 \pagebreak
 %----------------------------------------------------------
 \subsection*{Ejercicio 1} 
-	\emph{Algo algo}
+	\emph{Damos una derivación de tipo para el término \texttt{S} definido en Prelude.lam donde: 
+		\\
+		\\ 
+		\indent $S = \lambda x\!:\!B \rightarrow B \rightarrow B\; . \;\lambda y\!:\!B \rightarrow B\; . \;\lambda z\!:\!B\; . \;(x\;\;z)\;\;(y\;\;z)$
+	}
+	\\
 	\\
 	\begin{align*}
-		\infer[regla]{
-			abajo
+		\infer[T_{ABS}]{
+			\vdash\lambda x\!:\!B \rightarrow B \rightarrow B\; . \;\lambda y\!:\!B \rightarrow B\; . \;\lambda z\!:\!B\; . \;(x\;\;z)\;\;(y\;\;z)\!:\!(B \rightarrow B \rightarrow B) \rightarrow (B \rightarrow B) \rightarrow B \rightarrow B
 		}{
-			arriba
+			\infer[T_{ABS}]{
+				x\!:\!B \rightarrow B \rightarrow B \;\vdash\; \lambda y\!:\!B \rightarrow B\; . \;\lambda z\!:\!B\; . \;(x\;\;z)\;\;(y\;\;z)\!:\!(B \rightarrow B) \rightarrow (B \rightarrow B)
+			}{
+				\infer[T_{ABS}]{
+					x\!:\!B \rightarrow B \rightarrow B, y\!:\!B \rightarrow B \;\vdash\;\lambda z\!:\!B\; . \;(x\;\;z)\;\;(y\;\;z)\!:\!B \rightarrow B
+				}{
+					\infer[T_{APP}]{
+						x\!:\!B \rightarrow B \rightarrow B, y\!:\!B \rightarrow B, z\!:\!B \;\vdash\;(x\;\;z)\;\;(y\;\;z)\!:\!B
+					}{
+						\infer[T_{APP}]{
+							\Gamma \;\vdash\;x\;\;z\!:\!B \rightarrow B
+						}{
+							\infer[T_{VAR}]{
+								\Gamma \;\vdash\;x\!:\!B \rightarrow B \rightarrow B
+							}{
+								x\!:\!B \rightarrow B \rightarrow B \in \Gamma
+							} & \qquad
+							\infer[T_{VAR}]{
+								\Gamma \;\vdash\;z\!:\!B
+							}{
+								z\!:\!B \in \Gamma
+							}
+						} & \qquad
+						\infer[T_{APP}]{
+							\Gamma \;\vdash\;y\;\;z\!:\!B
+						}{
+							\infer[T_{VAR}]{
+								\Gamma \;\vdash\;y\!:\!B \rightarrow B
+							}{
+								y\!:\!B \rightarrow B \in \Gamma
+							} & \qquad
+							\infer[T_{VAR}]{
+								\Gamma \;\vdash\;z\!:\!B
+							}{
+								z\!:\!B \in \Gamma
+							}
+						}
+					}
+				}
+			}
 		}
 	\end{align*}
+	\\
+	\emph{Por comodidad, llamamos:\; $\Gamma = x\!:\!B \rightarrow B \rightarrow B, \; y\!:\!B\rightarrow B,\;z\!:\!B$}
+	\\
+	\\
+	\\
 %----------------------------------------------------------
 \subsection*{Ejercicio 2} 
-	\emph{Explicación y cositas}
+	\emph{}
+	\\
+	\\
+	La función \texttt{infer} retorna un \texttt{Either String Type}, en lugar de un valor de tipo \texttt{Type}, ya que en caso de que la inferencia de tipo falle, retorna un \texttt{String} con detalles del error.
+	\\
+	El operador $>>=$ nos permite pasar valores no monádicos a funciones sin salir de una mónada. En nuestro caso, $>>=$, toma un \texttt{Either v} y una función \texttt{f} y retorna \texttt{Left v} si es una cadena y \texttt{f v} en otro caso. Esto es útil para la propagación de errores sin necesidad de hacer \emph{pattern matching} sobre los resultados previos.
+	\\
+	\\
 	\\
 %----------------------------------------------------------
 \subsection*{Ejercicio 5} 
-	\emph{Algo algo}
+	\emph{Damos una derivación de tipo para el término:
+		\\
+		\\ 
+		\indent $({\bf let}\;\;z=((\lambda x\!:\!B\;.\;x)\;\;{\bf as}\;\;B \rightarrow B)\;\;{\bf in}\;\;z)\;\;{\bf as}\;\;B \rightarrow B$
+	}
+	\\
 	\\
 	\begin{align*}
-		\infer[regla]{
-			abajo
+		\infer[T_{ASCRIBE}]{
+			\vdash \; ({\bf let}\;\;z=((\lambda x\!:\!B\;.\;x)\;\;{\bf as}\;\;B \rightarrow B)\;\;{\bf in}\;\;z)\;\;{\bf as}\;\;B \rightarrow B\!:\!B \rightarrow B
 		}{
-			arriba
+			\infer[T_{LET}]
+			{
+				\vdash \; ({\bf let}\;\;z=((\lambda x\!:\!B\;.\;x)\;\;{\bf as}\;\;B \rightarrow B)\;\;{\bf in}\;\;z)\!:\!B \rightarrow B
+			}{
+				\infer[T_{ASCRIBE}]
+				{
+					\vdash \; (\lambda x\!:\!B\;.\;x)\;\;{\bf as}\;\;B \rightarrow B\!:\!B \rightarrow B
+				}
+				{
+					\infer[T_{ABS}]
+					{
+						\vdash \; \lambda x\!:\!B\;.\;x\!:\!B \rightarrow B
+					}
+					{
+						\infer[T_{VAR}]
+						{
+							x\!:\!B \; \vdash \; x\!:\!B
+						}
+						{
+							x\!:\!B \; \in \; x\!:\!B
+						}
+					}
+				} & \qquad
+				\infer[T_{VAR}]
+				{
+					z\!:\!B \rightarrow B\; \vdash \;z\!:\!B \rightarrow B
+				}
+				{
+					z\!:\!B \rightarrow B\; \in \;z\!:\!B \rightarrow B
+				}
+			}
 		}
 	\end{align*}
+	\\
+	\\
+	\\
 %----------------------------------------------------------
 \subsection*{Ejercicio 7} 
-	\emph{Algo algo}
+	\emph{Extendemos la relación de evaluación, agregando dos reglas nuevas:}
 	\\
 	\begin{align*}
-		\infer[regla1]{
-			abajo
+		\infer[E_{TUP1}]{
+			(t_{1},t_{2}) \rightarrow (t_{1}',t_{2})
 		}{
-			arriba
+			t_{1} \rightarrow t_{1}'
+		} \hspace{3cm}
+		\infer[E_{TUP2}]{
+			(v,t_{2}) \rightarrow (v,t_{2}')
+		}{
+			t_{2} \rightarrow t_{2}'
 		}
 	\end{align*}
 	\begin{align*}
-		\infer[regla2]{
-			abajo
+		\infer[E_{FST}]{
+			{\bf fst}\;\;t \rightarrow {\bf fst}\;\;t'
 		}{
-			arriba
+			t \rightarrow t'
+		} \hspace{3cm}
+		\infer[E_{SND}]{
+			{\bf snd}\;\;t \rightarrow {\bf snd}\;\;t'
+		}{
+			t \rightarrow t'
 		}
 	\end{align*}
+	\\
+	\\
+	\\	
 %----------------------------------------------------------
 \subsection*{Ejercicio 9} 
-	\emph{Algo algo}
+	\emph{Damos una derivación de tipo para el término:
+		\\
+		\\ 
+		\indent $({\bf let}\;\;z=((\lambda x\!:\!B\;.\;x)\;\;{\bf as}\;\;B \rightarrow B)\;\;{\bf in}\;\;z)\;\;{\bf as}\;\;B \rightarrow B$
+	}
+	\\
 	\\
 	\begin{align*}
-		\infer[regla1]{
-			abajo
+		\infer[T_{FST}]{
+			\vdash \; {\bf fst}({\bf unit} \;{\bf as}\; {\bf Unit},\lambda x\!:\!(B,B)\;.\;{\bf snd}\;\;x)\!:\!{\bf Unit}
 		}{
-			arriba
+			\infer[T_{PAIR}]
+			{
+				\vdash \; ({\bf unit} \;{\bf as}\; {\bf Unit},\lambda x\!:\!(B,B)\;.\;{\bf snd}\;\;x)\!:\!({\bf Unit}, B)
+			}
+			{
+				\infer[T_{ASCRIBE}]
+				{
+					\vdash \; {\bf unit}\;{\bf as}\;{\bf Unit}\!:\!{\bf Unit}
+				}
+				{
+					\infer[T_{UNIT}]
+					{
+						\vdash \; {\bf unit}\!:\!{\bf Unit}
+					}
+					{}
+				} & \qquad
+				\infer[T_{ABS}]
+				{
+					\vdash \; \lambda x\!:\!(B,B) \;.\;{\bf snd}\;\;x\!:\!B
+				}
+				{
+					\infer[T_{SND}]
+					{
+						x\!:\!(B,B) \; \vdash \; {\bf snd} \;\; x\!:\!B
+					}
+					{
+						\infer[T_{VAR}]
+						{
+							x\!:\!(B,B) \; \vdash \; x\!:\!(B,B)
+						}{
+							x\!:\!(B,B) \in x\!:\!(B,B)
+						}
+					}
+				}
+			}
 		}
 	\end{align*}
 %----------------------------------------------------------
