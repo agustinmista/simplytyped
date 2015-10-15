@@ -76,15 +76,63 @@
 \pagebreak
 %----------------------------------------------------------
 \subsection*{Ejercicio 1} 
-	\emph{Algo algo}
+	\emph{Damos una derivación de tipo para el término \texttt{S} definido en Prelude.lam donde: 
+		\linebreak 
+		\\ 
+		\indent $S = \lambda x\!:\!(B \rightarrow B \rightarrow B).\;\lambda y\!:\!(B\rightarrow B).\;\lambda z\!:\!B.\;\;(x\;z)\;(y\;z) \;:\; (B \rightarrow B \rightarrow B)\rightarrow(B \rightarrow B)\rightarrow B \rightarrow B$
+	}
 	\\
 	\begin{align*}
-		\infer[regla]{
-			abajo
+		\infer[T_{ABS}]{
+			\vdash \; \lambda x\!:\!(B \rightarrow B \rightarrow B).\;\lambda y\!:\!(B\rightarrow B).\;\lambda z\!:\!B.\;\;(x\;z)\;(y\;z) \;:\; (B \rightarrow B \rightarrow B)\rightarrow(B \rightarrow B)\rightarrow B \rightarrow B
 		}{
-			arriba
+			\infer[T_{ABS}]{
+				x\!:\!(B \rightarrow B \rightarrow B) \; \vdash \; \lambda y\!:\!(B\rightarrow B).\;\lambda z\!:\!B.\;\;(x\;z)\;(y\;z) \;:\;(B \rightarrow B)\rightarrow B \rightarrow B
+			}{
+				\infer[T_{ABS}]{
+					x\!:\!(B \rightarrow B \rightarrow B), \; y\!:\!(B\rightarrow B) \; \vdash \; \lambda z\!:\!B.\;\;(x\;z)\;(y\;z) \;:\; B\rightarrow B
+				}{
+					\infer[T_{ABS}]{
+						x\!:\!(B \rightarrow B \rightarrow B), \; y\!:\!(B\rightarrow B),\;z\!:\!B \; \vdash \; (x\;z)\;(y\;z) \;:\; B
+					}{
+						\infer[T_{APP}]{
+							\Gamma \; \vdash \; x\;z \;:\; B \rightarrow B
+						}{
+							\infer[T_{VAR}]{
+								\Gamma \; \vdash \; x\!:\!(B \rightarrow B \rightarrow B)
+							}{
+								x\!:\!(B \rightarrow B \rightarrow B) \in \Gamma
+							}
+							\hspace{0.5cm}
+							\infer[T_{VAR}]{
+								\Gamma \; \vdash \; z\!:\!B
+							}{
+								x\!:\!B \in \Gamma
+							}
+						}
+						\hspace{1cm}
+						\infer[T_{APP}]{
+							\Gamma \; \vdash \; y\;z \;:\; B
+						}{
+							\infer[T_{VAR}]{
+								\Gamma \; \vdash \; y\!:\!(B \rightarrow B)
+							}{
+								y\!:\!(B \rightarrow B) \in \Gamma
+							}\hspace{0.5cm}
+							\infer[T_{VAR}]{
+								\Gamma \; \vdash \; z\!:\!B
+							}{
+								z\!:\!B \in \Gamma
+							}
+						}
+					}
+				}
+			}
 		}
 	\end{align*}
+	\\
+	\emph{Por comodidad, llamamos:\; $\Gamma = x\!:\!(B \rightarrow B \rightarrow B), \; y\!:\!(B\rightarrow B),\;z\!:\!B$}
+	\\
 %----------------------------------------------------------
 \subsection*{Ejercicio 2} 
 	\emph{Explicación y cositas}
