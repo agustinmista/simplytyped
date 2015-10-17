@@ -213,15 +213,25 @@
 		}
 	\end{align*}
 	\begin{align*}
-		\infer[E_{FST}]{
+		\infer[E_{FST1}]{
 			{\bf fst}\;\;t \rightarrow {\bf fst}\;\;t'
 		}{
 			t \rightarrow t'
 		} \hspace{3cm}
-		\infer[E_{SND}]{
+		\infer[E_{SND1}]{
 			{\bf snd}\;\;t \rightarrow {\bf snd}\;\;t'
 		}{
 			t \rightarrow t'
+		}
+	\end{align*}
+	\begin{align*}
+		\infer[E_{FST2}]{
+			{\bf fst}\;\;(t_{1},t_{2}) \rightarrow t_{1}
+		}{
+		} \hspace{3cm}
+		\infer[E_{SND2}]{
+			{\bf snd}\;\;(t_{1},t_{2}) \rightarrow t_{2}
+		}{
 		}
 	\end{align*}
 	\\
